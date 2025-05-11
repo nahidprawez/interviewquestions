@@ -1,0 +1,3 @@
+1. Review MongoDB architecture and how it's different from SQL.
+
+Answer:
