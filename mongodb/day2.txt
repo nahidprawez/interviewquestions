@@ -1,0 +1,79 @@
+SCHEMA DESIGN:
+
+1. Learn embedding vs referencing.
+
+Can you explain the difference between embedding and referencing in MongoDB, and when you would use one over the other?
+
+Ans:
+Sure. In MongoDB, embedding means storing related data directly inside the same document. 
+For example, a blog post might embed the author's name and email right in the post document. 
+This is efficient when the data is always accessed together, doesn't change often, and the relationship is one-to-few.
+
+On the other hand, referencing means storing related data in separate documents and linking them using a reference—like storing the authorId in the post document and retrieving the author's data from the users collection. 
+This is useful for many-to-many relationships or when the related data is large or changes frequently.
+
+For instance, if I were designing an e-commerce platform, I’d use referencing between users and orders, 
+since a user can have many orders and we might want to update user data without affecting all orders. 
+But if I were designing a product document with specifications, I might embed those specs,
+ because they’re tightly coupled and rarely reused elsewhere.
+
+CONCEPT:
+
+*In document databases like MongoDB, we use embedding to store related data within a single document, and referencing to link related documents using a reference ID."
+I prefer embedding when the relationship is one-to-few, the related data doesn't change often, and it's always accessed together."
+
+I use referencing for large or frequently updated data, or many-to-many relationships—like users and their orders in an e-commerce platform.
+
+Embedding improves read performance and simplifies queries, while referencing improves flexibility and avoids data duplication 
+but might require more joins or lookups.
+
+Embedding:
+
+{
+  "_id": "post1",
+  "title": "My Blog Post",
+  "author": {
+    "name": "Alice",
+    "email": "alice@example.com"
+  }
+}
+
+referencing:
+
+// Post document
+{
+  "_id": "post1",
+  "title": "My Blog Post",
+  "authorId": "user123"
+}
+
+// User document
+{
+  "_id": "user123",
+  "name": "Alice"
+}
+
+💡 When to Use Each
+Situation	                       Prefer Embedding	         Prefer Referencing
+One-to-one or one-to-few	             ✅	                        ❌
+Data always accessed together	         ✅	                        ❌
+Data changes frequently	                 ❌                          ✅
+Avoiding data duplication is important	 ❌	                        ✅
+Many-to-many relationships               ❌	                        ✅
+
+
+
+-----------------------------------------------------------------------------
+2. Can you explain what normalization and denormalization are, and when you would use each?
+
+In MongoDB, we often choose between embedding and referencing based on access patterns and data relationships. 
+Embedding is a form of denormalization where related data is stored in the same document, which improves read performance and simplifies 
+queries—ideal for data that is frequently read together and rarely updated separately.
+
+Referencing is like normalization: 
+we keep data in separate documents and link them using ObjectIDs. It’s better for data that changes frequently, 
+is reused across collections, or could grow large.
+
+For example, if I’m building a blog platform, 
+I might embed comments inside a post document if there are only a few. But if each post can have thousands of comments,
+ I’d store them in a separate collection and reference the post.

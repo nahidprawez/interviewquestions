@@ -1,3 +1,86 @@
 1. Review MongoDB architecture and how it's different from SQL.
 
 Answer:
+MongoDB is a NO-SQL database that stores data in a flexible, JSON-like format called BSON.
+Unlike traditional SQL databases, which uses structured table with predefined schemas, MongoDB allows for a more dynamic
+and scalable data structure, which is specially useful for modern web applications that require agility(quicker adaptation to changing needs) 
+and fast iteration.
+
+In terms of architecture, MongoDb follows a document based model where each record is a document stored in collections.
+This enables embedded data models, reducing the need for complex joins that are typical in relational databases.
+it also scales horizontally through sharding (distributing data into multiple server), 
+allowing it to handle large scale data across distributed systems.
+
+This flexibility and scalability are a key reason why MongoDB fits so well in the MERN stack, 
+especially for projects with frequently changing requirements or diverse data types.
+
+DIFFERENCES:
+
+* Data Model
+
+MongoDB: Utilizes a document-oriented model where data is stored in flexible, JSON-like documents (BSON). 
+This allows for dynamic schemas, enabling each document to have a unique structure.
+
+SQL: Employs a relational model with data organized into tables comprising rows and columns. 
+This structure enforces a fixed schema, ensuring data consistency and integrity. 
+
+* Schema Design
+
+MongoDB: Features a flexible schema, permitting on-the-fly changes without affecting existing data. 
+This is advantageous for applications with evolving data requirements.
+
+SQL: Requires a predefined schema, meaning any structural changes necessitate alterations to the existing database, 
+which can be time-consuming and complex.
+
+* Query Language
+MongoDB: Uses the MongoDB Query Language (MQL), which is designed to work with its document model and 
+is intuitive for developers familiar with JavaScript. 
+
+SQL: Utilizes the Structured Query Language (SQL), a powerful and expressive language ideal for complex queries and transactions. 
+
+* Scalability
+MongoDB: Designed for horizontal scaling through sharding, distributing data across multiple servers 
+to handle large volumes of data and traffic efficiently.
+SQL: Typically scales vertically by enhancing the existing server's capabilities, 
+which can be limiting and costly compared to horizontal scaling.
+
+* Transactions and Consistency
+MongoDB: Provides multi-document ACID transactions, but traditionally emphasizes performance and scalability over strict consistency. 
+SQL: Offers robust ACID-compliant transactions, ensuring data integrity and consistency, which is crucial for applications like banking systems.
+
+* Use Cases
+MongoDB: Ideal for applications requiring flexibility, such as content management systems, real-time analytics, and IoT applications. 
+
+SQL: Best suited for applications needing complex queries and transactions, like financial systems, CRM, and ERP platforms
+
+
+KEY NOTE:
+
+Vertical and horizontal scaling are two distinct methods for increasing a system's capacity to handle workload demands. 
+Vertical scaling, also known as "scaling up," involves increasing the resources (like CPU, memory, or storage) of a single server.
+ Horizontal scaling, or "scaling out," on the other hand, adds more servers to the system to distribute the workload across multiple machines
+
+
+--------------------------------------------------------------------------------------
+
+2. Practice:
+
+Insert, update, delete, and find operations.
+
+Projections and query filters.
+
+*****
+Using Mongodb compass:
+
+create DB: use dbName (It will create if the db not found)
+create collection: db.createCollection("collectionname")
+insertMany: db.collectionName.insertMany([]);
+
+sample Data:
+
+[
+  { "name": "Alice", "age": 30, "department": "HR", "salary": 50000 },
+  { "name": "Bob", "age": 25, "department": "Engineering", "salary": 70000 },
+  { "name": "Charlie", "age": 35, "department": "Marketing", "salary": 60000 },
+  { "name": "David", "age": 28, "department": "Engineering", "salary": 72000 }
+]
