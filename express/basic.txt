@@ -1,0 +1,139 @@
+
+ 1. What is Express.js? Why do we use it?
+ 
+ Express.js is a minimal and flexible Node.js web application framework that provides
+  a robust set of features for building single-page, multi-page, and RESTful APIs. 
+ It simplifies the process of writing server-side logic, managing routing, middleware, and HTTP requests/responses.
+ 
+ 
+ 2. What is middleware in Express.js?
+ Middleware functions are functions that have access to the request, response, and next() function in the request-response cycle. 
+ Middleware can: 
+ -Execute any code
+ -Modify the request and response objects
+ -End the request-response cycle
+ -Call the next middleware in the stack
+ 
+
+Example of Middleware:
+
+app.use((req, res, next) => {
+  console.log('Request Time:', Date.now());
+  next();
+});
+
+3. What is the difference between app.use() and app.get()?
+
+app.use() is used to register middleware or apply logic to all HTTP methods.
+app.get() is used to handle GET requests for a specific route.
+
+Example
+app.use(loggerMiddleware); // Applies to all requests
+app.get('/users', getUsersHandler); // Only GET /users
+
+
+4. How do you handle errors in Express.js?
+By defining a special middleware with four parameters, where the first parameter is the error.
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Internal Server Error' });
+});
+
+5. How do you define dynamic routes in Express?
+app.get('/user/:id', (req, res) => {
+  const userId = req.params.id;
+  res.send(`User ID: ${userId}`);
+});
+
+
+6. What is the role of next() in Express middleware?
+next() passes control to the next middleware function in the stack. Without it, the request will hang unless a response is sent.
+
+7. How do you create modular routes using express.Router()?
+// userRoutes.js
+const express = require('express');
+const router = express.Router();
+
+router.get('/', getAllUsers);
+router.post('/', createUser);
+
+module.exports = router;
+
+// app.js
+const userRoutes = require('./routes/userRoutes');
+app.use('/users', userRoutes);
+
+
+8. What is the difference between req.params, req.query, and req.body?
+req.params: For route parameters (/users/:id)
+req.query: For URL query strings (/users?page=2)
+req.body: For POST/PUT body data (requires body-parser or express.json())
+
+
+9. How do you secure your Express app?
+Use helmet to set secure HTTP headers
+Use cors for Cross-Origin Resource Sharing
+Use rate limiting to prevent brute-force attacks
+Validate and sanitize inputs
+Avoid exposing stack traces in production
+
+10. What is CORS and how do you handle it in Express?
+CORS (Cross-Origin Resource Sharing) allows restricted resources to be requested from another domain.
+Use the cors package:
+const cors = require('cors');
+app.use(cors());
+
+11. How do you implement environment-specific configurations in Express?
+Use the dotenv package to manage environment variables.
+require('dotenv').config();
+const PORT = process.env.PORT || 3000;
+
+12. How do you implement rate limiting in Express?
+Use the express-rate-limit middleware:
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+app.use(limiter);
+
+
+13. What is the use of express.json() and express.urlencoded()?
+express.json() parses incoming JSON requests.
+
+express.urlencoded({ extended: true }) parses URL-encoded form data.
+Both are necessary for reading request bodies.
+
+14. How do you connect a MongoDB database in an Express app?
+Using Mongoose:
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('DB Connected'))
+  .catch(err => console.error(err));
+
+
+15. Explain a RESTful route structure you use in Express.js
+For a user resource:
+GET /users → Get all users
+GET /users/:id → Get single user
+POST /users → Create user
+PUT /users/:id → Update user
+DELETE /users/:id → Delete user
+
+
+------------------
+Mock Interview:
+
+Can you explain the concept of middleware in Express.js and give a real-world use case where you’ve implemented it?
+
+Middleware in Express.js is a function that has access to the req, res, and next() objects in the request-response cycle. 
+It is used to execute code, modify request/response objects, end the request-response cycle, or call the next middleware.
+In one of my projects, I built a custom authentication middleware for order-related APIs. 
+The client would send an HMAC signature generated using an API key and secret.
+ My middleware recreated the HMAC on the server side and compared it with the incoming one. 
+ If they matched, the request was allowed to proceed via next(); otherwise, I returned a 401 Unauthorized response. 
+ This helped ensure only trusted clients could access sensitive endpoints.
+----------------------
+ What is the difference between app.use() and app.get() in Express? Can you provide examples where you’ve used each one?
+
