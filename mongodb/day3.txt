@@ -1,0 +1,119 @@
+Learn different index types (single, compound, multikey, text, hashed).
+
+-
+Defintion:
+In MongoDB, indexes are data structures that improve the speed of data retrieval by
+ allowing the database to quickly find documents that match a query, without having
+  to scan the entire collection. They store a small portion of the collection's data 
+  in an easily traversable form, using a B-tree data structure. Indexes can be created 
+  on single fields or combinations of fields, and can be used to optimize queries for specific criteria.
+
+1. Single Field Index
+Definition: Index on a single field.
+
+db.collection.createIndex({name : 1})  // 1 for ascending, -1 for descending
+
+Use Case: When you often query or sort by a single field (e.g., name).
+
+2. Compound Index
+Definition: Index on multiple fields in a defined order.
+
+db.users.createIndex({ name: 1, age: -1 })
+
+Use Case: Useful for queries that use the prefix fields in the same order.
+Important Rule: MongoDB can use the index if the query includes the leftmost prefix.
+
+3. Multikey Index
+
+Definition: Automatically created when indexing array fields.
+Example:
+
+db.posts.createIndex({ tags: 1 })
+
+Use Case: When a field holds an array of values (e.g., tags: ["mongodb", "indexing"]).
+
+4. Text Index
+
+Definition: For full-text search on string content.
+db.articles.createIndex({ content: "text" })
+Use Case: Used with $text queries for search features.
+Limitations: Only one text index per collection.
+
+5. Hashed Index
+Definition: Indexes the hash of a field's value.
+db.users.createIndex({ userId: "hashed" })
+Use Case: Primarily used for sharding based on hashed values.
+
+
+------------------------------
+Question & Answers:
+
+Q1: Can you explain what an index is in MongoDB and why it's important?
+An index in MongoDB is a special data structure that stores a small portion 
+of the collection’s data in an easily traversable form. 
+Indexes improve the speed of read operations by allowing the database 
+to quickly locate the documents that match a query. 
+Without an index, MongoDB performs a collection scan, which is inefficient for large datasets.
+-----------------------
+Q2: You want to search users by email or username. What index would you use?
+I would create a compound index if both fields are often queried together:
+db.users.createIndex({ email: 1, username: 1 })
+
+Or if they are queried independently, I’d create two separate single-field indexes:
+db.users.createIndex({ email: 1 })
+db.users.createIndex({ username: 1 })
+
+This depends on the query pattern. If it's mostly searches by either field, single-field indexes are better.
+------------------------------
+Q3: You have a tags array in documents. How does MongoDB handle indexing here?
+MongoDB automatically creates a multikey index when you index an array field:
+db.products.createIndex({ tags: 1 })
+Each value in the array is indexed, so documents with multiple tags will have multiple index entries. This allows efficient queries like:
+db.products.find({ tags: "electronics" })
+-----------------------------
+Q4: Compound index: userId + orderDate. Will a query on orderDate alone use the index?
+No. The index on { userId: 1, orderDate: -1 } is not usable for a query that only filters on orderDate. 
+MongoDB follows the leftmost prefix rule, so the index can only be used if userId is included in the query.
+To optimize for orderDate alone, a separate index should be created:
+db.orders.createIndex({ orderDate: -1 })
+----------------
+Q5: What are text indexes? When would you use them? Any limitations?
+ext indexes are used for full-text search on string fields. They support queries like:
+db.articles.find({ $text: { $search: "mongodb indexing" } })
+Create them like this:
+db.articles.createIndex({ content: "text" })
+
+Limitations:
+
+Only one text index per collection.
+Cannot combine text index with compound indexes unless they are on other non-text fields.
+No support for sorting on a field other than text score.
+---------------------
+Q6: What is a hashed index? Where is it useful?
+A hashed index indexes the hash value of a field, not the actual value:
+db.users.createIndex({ userId: "hashed" })
+It's mainly used in sharding, where documents are distributed evenly across shards to avoid hotspots. Not suitable for range queries.
+---------------
+ Q7: How to analyze slow queries and optimize with indexing?
+ Use .explain("executionStats") to analyze query plans:
+ db.collection.find({ field: "value" }).explain("executionStats")
+
+-Look at totalKeysExamined vs totalDocsExamined.
+-If totalDocsExamined is high, it means the query isn’t using an index well.
+-Create indexes based on the most frequent and expensive queries.
+-Monitor with MongoDB Atlas Profiler or db.system.profile.
+-------------------------
+Q8: Downsides of too many indexes?
+Slower writes: Every insert/update must also update the indexes.
+Increased storage: Indexes consume disk space.
+Query planner overhead: MongoDB has to evaluate which index to use, which can slow down query planning.
+---------------
+Query products by category and price range. What index to use?
+I would use a compound index:
+db.products.createIndex({ category: 1, price: 1 })
+
+This supports queries like:
+db.products.find({ category: "laptop", price: { $lt: 1000 } })
+It also supports sorting by price within a category.
+
+
