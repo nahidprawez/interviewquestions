@@ -137,3 +137,130 @@ The client would send an HMAC signature generated using an API key and secret.
 ----------------------
  What is the difference between app.use() and app.get() in Express? Can you provide examples where you’ve used each one?
 
+In Express.js, app.use() is primarily used to mount middleware or route handlers at a specific path. 
+It applies to all HTTP methods (GET, POST, PUT, etc.), whereas app.get() specifically handles GET requests.
+----
+Example 1 – app.use() for mounting routers:
+
+import express from 'express';
+import userRouter from './routes/userRouter.js';
+
+const app = express();
+app.use('/api', userRouter);
+
+This will mount all routes defined in userRouter under the /api path.
+----
+Example 2 – app.get() for defining GET endpoint:
+
+app.get('/register', (req, res) => {
+  res.send('Registration Page');
+});
+
+This specifically handles GET requests to /register.
+
+In summary:
+
+app.use() → applies middleware or routers
+
+app.get() → defines a route for HTTP GET requests only.
+
+-------------------------------------------------------------
+How do you handle error handling in Express?
+Can you explain how a centralized error handler works and when you might use next(err)?
+
+Answer:
+In Express.js, error handling can be managed at multiple levels.
+
+First, I use try...catch blocks inside async route handlers to catch runtime or async errors:
+
+app.get('/users', async (req, res, next) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    next(err); // Passes error to centralized handler
+  }
+});
+
+For centralized error handling, I define a middleware at the bottom of all routes:
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
+});
+
+I also create custom middleware to handle validation, such as checking for required body parameters or verifying JWT tokens:
+
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization;
+  if (!token) return res.status(401).json({ message: 'Unauthorized' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    next(err); // Will be handled by centralized error handler
+  }
+};
+
+This layered approach helps keep my code clean and consistent while properly catching and reporting errors to the client.
+
+------------------------------------------------------------------------
+Can you explain the difference between req.params, req.query, and req.body in Express?
+Also, give an example use case for each.
+
+Answer:
+
+In Express.js, req.params, req.query, and req.body are all used to access different parts of the incoming HTTP request:
+
+req.params – Used to access route parameters in the URL path. These are defined using : in the route.
+
+app.get('/users/:username', (req, res) => {
+  const username = req.params.username;
+  res.send(`User: ${username}`);
+});
+
+URL: /users/nahid → req.params.username = 'nahid'
+
+req.query – Used to access query string parameters, typically used for filtering or sorting data.
+
+app.get('/users', (req, res) => {
+  const { name, age } = req.query;
+  res.send(`Filtering users by name: ${name}, age: ${age}`);
+});
+
+req.body – Used to access the payload of POST, PUT, or DELETE requests. This is commonly used when creating or updating resources.
+
+app.post('/register', (req, res) => {
+  const { username, password } = req.body;
+  res.send(`User ${username} registered`);
+});
+
+Requires middleware like express.json() to parse JSON data from the request body.
+
+---------------------------------------------------------
+What is express.Router() and why is it useful?
+Can you explain how you’ve used it in a project to organize your routes?
+
+In Express.js, express.Router() is used to create modular, mountable route handlers. 
+It helps organize the application into smaller, manageable files instead of defining all routes directly on the main app instance.
+
+For example, in a recent project (an app builder for Shopify), I organized routes like this:
+
+adminRoutes.js:
+const router = require('express').Router();
+router.get('/users', getAdminUsers);
+router.post('/create_user', createAdminUser);
+module.exports = router;
+
+In index.js or app.js:
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/admin', adminRoutes);
+
+This means a POST request to /admin/create_user will trigger the createAdminUser handler.
+
+I’ve followed a similar pattern for organizing routes under /api/orders, /api/customers, and /api/settings — 
+which made the codebase much more maintainable and scalable.
+
+
+
+
