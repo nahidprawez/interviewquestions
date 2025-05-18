@@ -1,0 +1,68 @@
+How do you handle performance optimization in large-scale Express applications?
+Can you mention some middleware or techniques you've used to improve API performance?
+
+Answer:
+In large-scale Express applications, performance optimization is critical. I use several strategies:
+
+Request Validation Early: 
+I validate headers, query/body params, and authentication as early as possible to prevent unnecessary DB or external service calls.
+
+Rate Limiting: 
+I use express-rate-limit to throttle incoming traffic and prevent abuse, especially for sensitive or costly APIs like payment or order actions.
+
+Middleware-Based Token Validation: 
+For example, in a cancelOrder API for a Shopify app, I implemented a verifyRequest middleware that checks the HMAC or token from request headers. If invalid, the request is immediately rejected.
+
+Strict Schema Validation: 
+Inside the actual route handler (orderCancel), I strictly validate required fields like shop and orderId before proceeding. 
+This avoids unexpected failures deeper in the flow.
+
+Sanitization and Security: 
+I use libraries like express-validator or Joi to sanitize inputs and prevent injection attacks.
+These layered checks ensure the API handles only valid requests, reducing load and improving speed and reliability under high traffic.
+
+------------------------------------------------------
+How do you handle asynchronous errors in Express.js?
+Can you give an example of how you avoid repetitive try-catch blocks in async routes?
+
+Answer:
+In Express.js, I handle asynchronous errors using try-catch inside the route handlers. 
+But to avoid repeating this pattern in every route, I wrap async handlers in a reusable error-handling wrapper function.
+
+Here's how I handle it:
+1. Async Handler Wrapper – asyncHandler.js
+
+export const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+2. Using it in a Route:
+
+import { asyncHandler } from './utils/asyncHandler.js';
+
+export const getOrders = asyncHandler(async (req, res) => {
+  const { shop } = req.body;
+  if (!shop) {
+    return res.status(400).json({ message: 'Shop is required' });
+  }
+
+  const ordersInfo = await orderDetails(shop);
+  if (!ordersInfo) {
+    return res.status(404).json({ message: 'No orders found' });
+  }
+
+  res.status(200).json({ data: ordersInfo.data, success: true });
+});
+
+3. Global Error Handler Middleware:
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ message: err.message || 'Internal Server Error' });
+});
+
+I use try-catch inside async route handlers for basic error handling. 
+But to reduce code repetition and improve maintainability, I create a reusable asyncHandler wrapper. 
+It ensures all unhandled errors are automatically passed to the centralized error middleware using next(err). 
+This keeps the route code clean and consistent.
+
+I also return meaningful status codes like 400 for bad requests and 404 when data is not found.
+
+---------------------------------------------------------------
