@@ -66,3 +66,146 @@ This keeps the route code clean and consistent.
 I also return meaningful status codes like 400 for bad requests and 404 when data is not found.
 
 ---------------------------------------------------------------
+What’s the difference between custom middleware and built-in middleware in Express?
+Have you written any custom middleware? Share a real use-case from your projects.
+
+Answer:
+In Express.js, middleware functions are used to handle the request-response cycle. There are two types:
+
+1. Built-in Middleware:
+These are provided by Express itself, such as:
+
+express.json() – to parse incoming JSON payloads
+
+express.urlencoded() – to parse URL-encoded data
+
+express.static() – to serve static files
+
+2. Custom Middleware:
+These are user-defined functions that can perform tasks like validation, authentication, 
+logging, etc. They follow the standard (req, res, next) signature and are added to routes 
+or globally using app.use() or directly in route chains.
+
+🔍 Example from my project:
+I created a custom middleware called verifyRequest to validate Shopify HMAC tokens for order-related APIs. 
+
+This middleware:
+Reads the headers and token
+Validates it against the server-side secret
+Calls next() if the token is valid
+Otherwise, it returns a 401 Unauthorized response.
+
+export const verifyRequest = (req, res, next) => {
+  try {
+    const token = req.headers['x-shopify-hmac-sha256'];
+    // Validate token logic...
+    if (isValidToken(token)) {
+      next();
+    } else {
+      return res.status(401).json({ message: 'Unauthorized request' });
+    }
+  } catch (err) {
+    next(err); // Forward to centralized error handler
+  }
+};
+
+I also use a global error-handling middleware at the bottom of the app to catch any unhandled errors and return proper responses.
+
+--------------------------------------------------------------------------
+
+How do you handle file uploads in Express.js?
+Which libraries have you used (e.g., Multer), and how do you validate uploaded files?
+
+Answer:
+
+Yes, I’ve implemented file uploads in Express.js using Multer, which is a middleware for handling multipart/form-data.
+ It’s especially useful for uploading images or documents from the frontend.
+
+Frontend Integration:
+In one of my projects, I used Shopify Polaris’s <DropZone> component for file uploads. 
+On the frontend, I used FormData to append the selected files:
+
+const formData = new FormData();
+formData.append('file', selectedFile);
+
+The request was sent using POST with enctype="multipart/form-data" — which is essential for file uploads.
+
+Backend (Express):
+On the server side, I used Multer and set up middleware like:
+
+import multer from 'multer';
+const storage = multer.memoryStorage(); // or diskStorage
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'), false);
+    }
+  },
+});
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  // handle file logic
+  res.json({ success: true });
+});
+
+I’ve used:
+upload.single('file') for single file upload
+upload.array('files') for multiple files
+Validation using mimetype and limits (file size, count)
+
+I also handle Multer errors centrally using Express error-handling middleware for better maintainability and consistent responses.
+
+-------------------------------------------------------
+What are some performance or security best practices you follow in large-scale Express apps?
+
+In large-scale Express applications, I follow a combination of performance and security best practices
+ to ensure the system is scalable, stable, and secure.
+
+ Security Practices:
+ JWT-based Authentication & Authorization:
+Every sensitive API is protected using JWT tokens, validated via middleware.
+
+Centralized Error Handling:
+I use a global middleware to catch and respond to all uncaught exceptions, ensuring consistent API responses and better debugging.
+
+Input Validation:
+I validate req.body, req.params, and req.query to avoid injection attacks and invalid data using either custom middleware or libraries like express-validator.
+
+Rate Limiting:
+I use express-rate-limit to prevent brute-force attacks and reduce abuse on public APIs.
+
+Secure Headers:
+I configure headers using Helmet to enhance API security (e.g., CSP, XSS protection).
+
+Log Sanitization:
+I avoid logging sensitive data like tokens or passwords in production logs.
+
+ Performance Practices:
+
+ Optimized MongoDB Queries:
+I structure schemas efficiently by:
+Using referencing for relational data
+Using embedded documents for frequently accessed nested data
+
+Indexing:
+I use proper indexing on searchable fields (like shop, orderId, email) to speed up query execution.
+
+Asynchronous Code & Await Best Practices:
+I make sure all database calls are properly awaited and use try/catch for safe handling.
+
+Caching (where applicable):
+For extremely high-frequency read data, I consider caching (e.g., Redis) to offload database hits.
+
+Minimal Payloads:
+I ensure only required fields are selected from DB queries to reduce response size and improve speed.
+
+For example, in my Shopify order APIs, I implemented token-based verification via middleware, 
+validated request headers and payloads, and optimized the database structure to return only the essential
+order data — resulting in reduced response time and improved stability under load.
+
+-------------XXXXXXXXXXXXXX----------------------------------XXXXXXXXXXXXXXXXX_----------------------------
+

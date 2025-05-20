@@ -1,0 +1,24 @@
+🧪 Mock Scenario: You have a Product collection and want to design a scalable API
+Q1: How would you design a Product Schema for an e-commerce app?
+
+Answer:
+
+const productSchema = new mongoose.Schema({
+   productId : {type : String, required: true},
+   title :  {type : String, required : true},
+   price :  {type : Number, required : true},
+   category :  {type : String, required : true},
+   images :  {type : String},
+   inStock :  {type : Boolean, default : false},
+  },
+  {
+     timestamps :  true
+  }
+)
+
+Embedding the category as a string works perfectly if categories are not expected to change frequently. 
+I have to keep queries lightweight and fast as I am not maintaining a separate categories collection (at least for now).
+
+if the categories change frequently, I have to prefer create another document for categories list and referece it in the product schema.
+
+-------------------------------------
